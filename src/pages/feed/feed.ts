@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, LoadingController } from 'ionic-angular';
 import { MovieProvider } from '../../providers/movie/movie';
 
 /**
@@ -18,39 +18,68 @@ import { MovieProvider } from '../../providers/movie/movie';
   ]
 })
 export class FeedPage {
-  public nomeUsuario:string="Willian Arruda";
+  public nomeUsuario: string = "Willian Arruda";
   public objeto_feed = {
-    titulo:"Willian Arruda",
-    data:"Novembro 5, 1955",
-    descricao:"Que app incrível não?",
-    qntd_likes:12,
-    qntd_comments:4,
-    time_comment:"11h atrás"
+    titulo: "Willian Arruda",
+    data: "Novembro 5, 1955",
+    descricao: "Que app incrível não?",
+    qntd_likes: 12,
+    qntd_comments: 4,
+    time_comment: "11h atrás"
   }
+
+  public loader;
+  public refresher;
+  public isRefreshing: boolean = false;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private movieProvider:MovieProvider) {
+    private movieProvider: MovieProvider,
+    public loadingCtrl: LoadingController) {
   }
 
-  public somaDoisNumeros(num1:number, num2:number):void{
-    //função de teste
-    alert(num1 + num2);
+  abrecarregando() {
+    this.loader = this.loadingCtrl.create({
+      content: "Carregando Filmes...",
+    });
+    this.loader.present();
+  }
+
+  fechaCarregando() {
+    this.loader.dismiss();
   }
 
   public lista_filmes = Array<any>();
 
-  ionViewDidLoad() {
-    //this.somaDoisNumeros(10,20);
+  doRefresh(refresher) {
+    this.refresher = refresher;
+    this.isRefreshing = true;
+    this.carregarFilmes();
+  }
+
+  ionViewDidEnter() {
+    this.carregarFilmes();
+  }
+
+  carregarFilmes() {
+    this.abrecarregando();
     this.movieProvider.getLatestMovies().subscribe(
-      data=>{
+      data => {
         const response = (data as any);
         const objeto_retorno = JSON.parse(response._body);
-        this.lista_filmes= objeto_retorno.results;
+        this.lista_filmes = objeto_retorno.results;
         console.log(objeto_retorno);
+        this.fechaCarregando();
+        if (this.isRefreshing) {
+          this.refresher.complete();
+          this.isRefreshing = false;
+        }
       }, error => {
         console.log(error);
+        this.fechaCarregando();
+        this.refresher.complete();
+        this.isRefreshing = false;
       }
     )
   }
