@@ -39,12 +39,15 @@ export class FeedPage {
     alert(num1 + num2);
   }
 
+  public lista_filmes = Array<any>();
+
   ionViewDidLoad() {
     //this.somaDoisNumeros(10,20);
     this.movieProvider.getLatestMovies().subscribe(
       data=>{
         const response = (data as any);
         const objeto_retorno = JSON.parse(response._body);
+        this.lista_filmes= objeto_retorno.results;
         console.log(objeto_retorno);
       }, error => {
         console.log(error);
